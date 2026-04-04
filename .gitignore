@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+*.egg-info/
+
+# Database (generated file — do not commit)
+*.db
+*.sqlite
+
+# Raw Yelp dataset (too large for GitHub)
+data/raw/*.json
+data/raw/*.csv
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

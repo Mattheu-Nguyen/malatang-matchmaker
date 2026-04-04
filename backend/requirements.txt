@@ -1,0 +1,8 @@
+# Python dependencies for the backend
+# Install with: pip install -r requirements.txt
+
+flask
+flask-cors
+pandas
+
+# No need to list sqlite3 — it comes built into Python
