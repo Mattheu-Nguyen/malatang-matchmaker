@@ -19,8 +19,9 @@ SPICE_KEYWORDS = {
 }
 
 BROTH_KEYWORDS = {
-    "spicy mala":  ["mala", "spicy broth", "red broth", "sichuan broth", "szechuan broth", "chili broth", "chili oil broth", "mala soup", "mala tang", "peppercorn broth", "ma la broth", "spicy base"],
-    "clear":       ["clear broth", "light broth", "plain broth"],
+    "mala":        ["mala", "spicy broth", "red broth", "sichuan broth", "szechuan broth", "chili broth", "chili oil broth", "mala soup", "mala tang", "peppercorn broth", "ma la broth", "spicy base"],
+    "bone broth":  ["bone broth", "rich broth", "milky broth", "creamy broth", "collagen broth", "slow cooked broth", "simmered broth", "long boiled broth", "tonkotsu", "white broth", "opaque broth", "thick broth", "house bone broth", "signature broth", "marrow broth", "bone soup", "hearty broth", "deep flavor broth", "gelatinous broth"],
+    "tom yum":     ["tom yum", "tomyum", "tom yam", "thai spicy soup", "thai sour soup", "hot and sour thai broth", "lemongrass broth", "lemongrass soup", "lime broth", "lime soup", "kaffir lime", "lime leaf", "galangal", "thai herbs", "chili lime broth", "sour spicy broth", "thai hot pot broth"],
     "tomato":      ["tomato"],
     "mushroom":    ["mushroom broth", "mushroom soup", "vegetarian broth", "vegan broth"],
 }
@@ -35,10 +36,12 @@ MEAT_KEYWORDS = {
 
 INGREDIENT_KEYWORDS = {
     "tofu":       ["tofu", "bean curd"],
-    "fish cake":  ["fish cake", "fishcake", "fish ball", "fishball", "fish tofu", "seafood ball"],
+    "fish cake":  ["fish cake", "fishcake", "fish tofu"],
     "mushroom":   ["mushroom", "enoki","shiitake", "king oyster", "oyster mushroom", "wood ear", "black fungus"],
     "noodles":    ["noodles", "noodle", "vermicelli", "udon", "ramen"],
-    "veggies":    ["veggies", "vegetables", "veggie","bok choy", "napa cabbage", "cabbage", "spinach", "lettuce", "lotus root", "corn", "seaweed"]
+    "veggies":    ["veggies", "vegetables", "veggie","bok choy", "napa cabbage", "cabbage", "spinach", "lettuce", "lotus root", "corn", "seaweed"],
+    "egg":        ["egg", "eggs"],   
+    "fish ball":  ["fish ball", "fishball", "seafood ball", "surimi"]
 }
 
 SIDE_DISH_KEYWORDS = {
@@ -60,11 +63,10 @@ def score_restaurant(restaurant: dict, preferences: dict) -> float:
     """Score a single restaurant against the user's preferences."""
     score = 0.0
 
-    # Combine categories + review text into one searchable string
+    # Combine name + review text into one searchable string
     searchable = " ".join(filter(None, [
-        restaurant.get("categories", "") or "",
-        restaurant.get("review_text", "") or "",
         restaurant.get("name", "") or "",
+        restaurant.get("review_text", "") or "",
     ]))
 
     # Spice level match (+10 per keyword hit) — accepts a string or list of strings
@@ -103,7 +105,7 @@ def score_restaurant(restaurant: dict, preferences: dict) -> float:
 
     # Star rating bonus to break ties (max +10)
     try:
-        score += float(restaurant.get("stars") or 0) * 2
+        score += float(restaurant.get("avg_rating") or 0) * 2
     except (TypeError, ValueError):
         pass
 
@@ -154,12 +156,8 @@ def get_recommendations(preferences: dict, top_n: int = 10) -> list[dict]:
             results.append({
                 "business_id":  restaurant.get("business_id"),
                 "name":         restaurant.get("name"),
-                "address":      restaurant.get("address"),
-                "city":         restaurant.get("city"),
-                "state":        restaurant.get("state"),
-                "stars":        restaurant.get("stars"),
-                "review_count": restaurant.get("review_count"),
-                "categories":   restaurant.get("categories"),
+                "avg_rating":   restaurant.get("avg_rating"),
+                "num_reviews":  restaurant.get("num_reviews"),
                 "match_score":  match_score,
             })
 
@@ -192,6 +190,6 @@ if __name__ == "__main__":
         print(f"Top {len(recommendations)} recommendations:\n")
         for i, r in enumerate(recommendations, 1):
             print(
-                f"  {i}. {r['name']} ({r['city']}, {r['state']}) "
-                f"— {r['stars']} stars — score: {r['match_score']:.1f}"
+                f"  {i}. {r['name']} "
+                f"— {r['avg_rating']} stars — score: {r['match_score']:.1f}"
             )
