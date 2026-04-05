@@ -1,0 +1,8 @@
+# Keep deploy uploads small — raw Yelp JSON is not needed (only data/processed/malatang.db).
+data/raw
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/venv
+**/.venv
+backend/node_modules

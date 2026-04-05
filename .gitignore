@@ -7,8 +7,9 @@ venv/
 .env
 *.egg-info/
 
-# Database (generated file — do not commit)
+# Database — raw/generated locally; processed DB may be committed for Vercel deploy
 *.db
+!data/processed/malatang.db
 *.sqlite
 
 # Raw Yelp dataset (too large for GitHub)
