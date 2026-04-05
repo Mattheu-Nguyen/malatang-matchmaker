@@ -5,10 +5,5 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     { "source": "/recommend", "destination": "/api/recommend" }
-  ],
-  "functions": {
-    "api/recommend.py": {
-      "excludeFiles": "{data/raw/**,backend/node_modules/**}"
-    }
-  }
+  ]
 }
