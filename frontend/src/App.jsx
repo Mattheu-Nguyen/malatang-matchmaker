@@ -419,7 +419,7 @@ function App() {
         id="results"
         ref={resultsRef}
         aria-live="polite"
-        className="scroll-mt-4 flex min-h-screen flex-col items-center justify-center border-t border-amber-200/80 bg-[#F9F1D2] px-4 py-8"
+        className="scroll-mt-4 flex min-h-screen flex-col items-center justify-center bg-[#F9F1D2] px-4 py-8"
       >
         <div className="relative mx-auto w-full max-w-4xl">
           <img
