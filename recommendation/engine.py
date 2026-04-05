@@ -62,15 +62,21 @@ def score_restaurant(restaurant: dict, preferences: dict) -> float:
         restaurant.get("name", "") or "",
     ]))
 
-    # Spice level match (+10 per keyword hit)
-    spice_pref = preferences.get("spice_level", "")
-    if spice_pref in SPICE_KEYWORDS:
-        score += _search(searchable, SPICE_KEYWORDS[spice_pref]) * 10
+    # Spice level match (+10 per keyword hit) — accepts a string or list of strings
+    spice_pref = preferences.get("spice_level", [])
+    if isinstance(spice_pref, str):
+        spice_pref = [spice_pref]
+    for spice in spice_pref:
+        if spice in SPICE_KEYWORDS:
+            score += _search(searchable, SPICE_KEYWORDS[spice]) * 10
 
-    # Broth match (+10 per keyword hit)
-    broth_pref = preferences.get("broth", "")
-    if broth_pref in BROTH_KEYWORDS:
-        score += _search(searchable, BROTH_KEYWORDS[broth_pref]) * 10
+    # Broth match (+10 per keyword hit) — accepts a string or list of strings
+    broth_pref = preferences.get("broth", [])
+    if isinstance(broth_pref, str):
+        broth_pref = [broth_pref]
+    for broth in broth_pref:
+        if broth in BROTH_KEYWORDS:
+            score += _search(searchable, BROTH_KEYWORDS[broth]) * 10
 
     # Meat preferences (+8 per keyword hit per meat)
     for meat in preferences.get("meats", []):
