@@ -2,6 +2,7 @@
 
 import os
 import sys
+from urllib.parse import unquote
 
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
@@ -55,12 +56,14 @@ def index():
 
 @app.route("/assets/<path:path>", methods=["GET"])
 def dist_assets(path):
-    return send_from_directory(os.path.join(DIST, "assets"), path)
+    safe = unquote(path).replace("\x00", "")
+    return send_from_directory(os.path.join(DIST, "assets"), safe)
 
 
 @app.route("/<path:path>", methods=["GET"])
 def dist_public(path):
     """Root-level files from Vite `public/` (e.g. favicon) and similar."""
+    path = unquote(path).replace("\x00", "")
     if path.startswith("recommend") or path.startswith("api/"):
         return jsonify({"error": "Method Not Allowed"}), 405
     candidate = os.path.join(DIST, path)

@@ -113,18 +113,41 @@ def score_restaurant(restaurant: dict, preferences: dict) -> float:
     return score
 
 
+def normalize_preferences(raw: dict) -> dict:
+    """Map frontend/API keys (spice, meat, side) to internal scoring keys."""
+    if not raw:
+        return {}
+    spice = raw.get("spice_level") or raw.get("spice") or []
+    if isinstance(spice, str):
+        spice = [spice]
+    broth = raw.get("broth") or []
+    if isinstance(broth, str):
+        broth = [broth]
+    meats = raw.get("meats") or raw.get("meat") or []
+    if isinstance(meats, str):
+        meats = [meats]
+    ingredients = raw.get("ingredients") or []
+    side_dishes = raw.get("side_dishes") or raw.get("side") or []
+    if isinstance(side_dishes, str):
+        side_dishes = [side_dishes]
+    return {
+        "spice_level": spice,
+        "broth": broth,
+        "meats": meats,
+        "ingredients": ingredients,
+        "side_dishes": side_dishes,
+    }
+
+
 def get_recommendations(preferences: dict) -> list[dict]:
     """
     Score every restaurant in the DB against `preferences` and return
     the top_n matches sorted by match_score descending.
 
-    Expected preference keys:
-        spice_level  : str  — "mild" | "medium" | "high" | "extra spicy"
-        broth        : str  — "spicy mala" | "clear" | "tomato" | "mushroom"
-        meats        : list[str]
-        ingredients  : list[str]
-        side_dishes  : list[str]  — "rice" | "fried dough" | "sesame noodles"
+    Accepts either internal keys or frontend keys:
+        spice_level or spice, broth, meats or meat, ingredients, side_dishes or side
     """
+    preferences = normalize_preferences(preferences or {})
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
 
