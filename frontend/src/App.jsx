@@ -40,6 +40,14 @@ import imgVeggies from "./assets/IMG_8166.PNG";
 // Side dishes
 import imgSausage from "./assets/sausage.png";
 import imgSquid from "./assets/squiddie.png";
+import imgPotatoTornado from "./assets/potato tornado.png";
+import imgFriedDough from "./assets/youtiao (fried dough).png";
+import imgFriedTaro from "./assets/alvin,mattheu,devin.png";
+
+// other
+import imgSubmit from "./assets/submit.PNG";
+import imgBubble from "./assets/bubble.PNG";
+import imgHappyEnding from "./assets/happyending.PNG";
 
 const SPICE_LEVELS = [
   { label: "mild", src: imgMild },
@@ -75,9 +83,11 @@ const INGREDIENT_OPTIONS = [
 ];
 
 const SIDE_OPTIONS = [
-  { label: "rice" },
-  { label: "fried dough" },
-  { label: "sesame noodles" },
+  { label: "sausage", src: imgSausage },
+  { label: "squid", src: imgSquid },
+  { label: "potato tornado", src: imgPotatoTornado },
+  { label: "fried dough", src: imgFriedDough },
+  { label: "fried taro", src: imgFriedTaro },
 ];
 
 /** Shape matches `/recommend` JSON. Toggle with `VITE_MOCK_RECOMMEND=true` in `.env.local`. */
@@ -96,24 +106,79 @@ function toggleListItem(setter, item) {
   );
 }
 
+/** Top pick from `/recommend`: array of rows or `{ recommended_place }`. */
+function recommendationFromResponse(data) {
+  const row =
+    Array.isArray(data) && data.length > 0
+      ? data[0]
+      : data && typeof data === "object" && data.recommended_place
+        ? data.recommended_place
+        : null;
+  if (!row || typeof row !== "object") return null;
+  return {
+    name: row.name ?? "Unknown",
+    businessId: row.business_id ?? null,
+    avgRating: row.avg_rating ?? null,
+    numReviews: row.num_reviews ?? null,
+    matchScore: row.match_score ?? null,
+    tagline: row.tagline ?? null,
+    matchDetail: row.match_detail ?? null,
+  };
+}
+
+/** Staggered bursts so confetti keeps going when results appear (~6s). Returns cleanup for timeouts. */
 function fireCelebrationConfetti() {
   if (
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   ) {
-    return;
+    return () => {};
   }
-  const defaults = { origin: { y: 0.62 }, zIndex: 9999 };
-  confetti({ ...defaults, particleCount: 100, spread: 65, startVelocity: 40 });
-  window.setTimeout(() => {
-    confetti({
-      ...defaults,
-      particleCount: 70,
-      spread: 100,
-      startVelocity: 28,
-      scalar: 0.9,
+  const defaults = { zIndex: 9999 };
+  const timeouts = [];
+
+  const burst = (delayMs, opts) => {
+    const id = window.setTimeout(() => {
+      confetti({
+        ...defaults,
+        origin: {
+          x: 0.35 + Math.random() * 0.3,
+          y: 0.52 + Math.random() * 0.18,
+        },
+        ...opts,
+      });
+    }, delayMs);
+    timeouts.push(id);
+  };
+
+  const durationMs = 6000;
+  const stepMs = 280;
+  for (let t = 0; t <= durationMs; t += stepMs) {
+    burst(t, {
+      particleCount: 35 + Math.floor(Math.random() * 45),
+      spread: 52 + Math.random() * 48,
+      startVelocity: 22 + Math.random() * 22,
+      scalar: 0.82 + Math.random() * 0.18,
     });
-  }, 180);
+  }
+
+  burst(120, {
+    particleCount: 110,
+    spread: 70,
+    startVelocity: 42,
+    origin: { x: 0.5, y: 0.62 },
+  });
+  burst(400, {
+    particleCount: 85,
+    spread: 100,
+    startVelocity: 30,
+    scalar: 0.9,
+    origin: { x: 0.5, y: 0.62 },
+  });
+
+  return () => {
+    for (const id of timeouts) window.clearTimeout(id);
+  };
 }
 
 function PreferenceTile({ label, src, selected, onToggle }) {
@@ -121,7 +186,7 @@ function PreferenceTile({ label, src, selected, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`flex min-h-[11rem] min-w-[8.5rem] flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 text-base font-medium transition-colors sm:min-h-[12rem] sm:min-w-[10rem] ${
+      className={`flex min-h-[11rem] min-w-[8.5rem] flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 text-base font-medium hover:cursor-pointer hover:scale-105 transition-all duration-300 sm:min-h-[12rem] sm:min-w-[10rem] ${
         selected
           ? "border-red-600 bg-red-500/30 text-white ring-2 ring-red-600 ring-offset-2"
           : "border-gray-300 bg-gray-50 hover:bg-gray-100"
@@ -157,15 +222,19 @@ function App() {
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
+    let stopConfetti = () => {};
     const t = window.setTimeout(() => {
       resultsRef.current?.scrollIntoView({
         behavior: reducedMotion ? "auto" : "smooth",
         block: "start",
       });
-      fireCelebrationConfetti();
+      stopConfetti = fireCelebrationConfetti();
     }, 0);
 
-    return () => window.clearTimeout(t);
+    return () => {
+      window.clearTimeout(t);
+      stopConfetti();
+    };
   }, [recommendedPlace]);
 
   const handleSubmit = async (e) => {
@@ -200,11 +269,12 @@ function App() {
         throw new Error(data.error || data.message || "Request failed");
       }
 
-      if (data.recommended_place) {
-        setRecommendedPlace(data.recommended_place);
+      const place = recommendationFromResponse(data);
+      if (place) {
+        setRecommendedPlace(place);
       } else {
         setSubmitError(
-          data.hint ||
+          (typeof data === "object" && data && data.hint) ||
             "No recommendation returned. Build the database with data/process_data.py if you have not yet.",
         );
       }
@@ -296,7 +366,10 @@ function App() {
               ))}
             </div>
 
-            <img src={step5} alt="Step 5: choose your side dishes" className="mx-auto h-auto w-full max-w-md object-contain"
+            <img
+              src={step5}
+              alt="Step 5: choose your side dishes"
+              className="mx-auto h-auto w-full max-w-md object-contain"
             ></img>
             <div className="flex flex-wrap justify-center gap-4 sm:gap-5">
               {SIDE_OPTIONS.map(({ label, src }) => (
@@ -316,6 +389,12 @@ function App() {
               </p>
             ) : null}
 
+            <img
+              src={imgBubble}
+              alt="Bubble"
+              className="mx-auto h-auto w-full max-w-3xl object-contain"
+            />
+
             {isLoading ? (
               <div className="flex justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-green-500"></div>
@@ -323,9 +402,13 @@ function App() {
             ) : (
               <button
                 type="submit"
-                className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+                className="hover:cursor-pointer hover:scale-105 transition-all duration-300"
               >
-                Submit
+                <img
+                  src={imgSubmit}
+                  alt="Submit"
+                  className="mx-auto h-auto w-full max-w-3xl object-contain"
+                ></img>
               </button>
             )}
           </form>
@@ -338,31 +421,54 @@ function App() {
         aria-live="polite"
         className="scroll-mt-4 flex min-h-screen flex-col items-center justify-center border-t border-amber-200/80 bg-[#F9F1D2] px-4 py-8"
       >
-        <div className="mx-auto w-full max-w-lg text-center">
-          {recommendedPlace ? (
-            <div className="rounded-2xl border-2 border-red-600/40 bg-white/90 p-8 shadow-lg ring-2 ring-amber-100">
-              <p className="text-sm font-semibold uppercase tracking-wide text-red-700">
-                Your match
-              </p>
-              <h2 className="mt-2 font-serif text-3xl font-bold text-gray-900 sm:text-4xl">
-                {recommendedPlace.name}
-              </h2>
-              {recommendedPlace.tagline ? (
-                <p className="mt-3 text-lg text-gray-700">
-                  {recommendedPlace.tagline}
+        <div className="relative mx-auto w-full max-w-4xl">
+          <img
+            src={imgHappyEnding}
+            alt=""
+            role="presentation"
+            className="mx-auto block h-auto w-full object-contain"
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-10">
+            <div className="w-full max-w-lg text-center mt-5">
+              {recommendedPlace ? (
+                <div className="justify-center">
+                  <h2 className="mt-20 font-vividly text-[#AC3142] text-8xl font-semibold sm:text-4xl">
+                    {recommendedPlace.name}
+                  </h2>
+                  {recommendedPlace.matchScore != null ||
+                  recommendedPlace.avgRating != null
+                   ? (
+                    <dl className="mt-6 space-y-4 pt-6 text-center text-3xl font-vividly text-[#AC3142]">
+                      {recommendedPlace.matchScore != null ? (
+                        <div>
+                          <dt className="font-medium ">
+                            Match score
+                          </dt>
+                          <dd className="mt-1 font-semibold">
+                            {Number(recommendedPlace.matchScore).toFixed(0)}
+                          </dd>
+                        </div>
+                      ) : null}
+                      {recommendedPlace.avgRating != null ? (
+                        <div>
+                          <dt className="font-medium">
+                            Average rating
+                          </dt>
+                          <dd className="mt-1 font-semibold tabular-nums">
+                            {Number(recommendedPlace.avgRating).toFixed(1)} / 5
+                          </dd>
+                        </div>
+                      ) : null}
+                    </dl>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="rounded-xl bg-white/85 px-4 py-3 text-base text-gray-700 shadow-md backdrop-blur-sm">
+                  Submit your preferences above to see your recommended spot.
                 </p>
-              ) : null}
-              {recommendedPlace.match_detail ? (
-                <p className="mt-2 text-base text-gray-600">
-                  {recommendedPlace.match_detail}
-                </p>
-              ) : null}
+              )}
             </div>
-          ) : (
-            <p className="text-gray-500">
-              Submit your preferences above to see your recommended spot.
-            </p>
-          )}
+          </div>
         </div>
       </section>
     </>

@@ -1,7 +1,21 @@
 @import "tailwindcss";
 
+/* Tailwind v4: `--font-<name>` → utility `font-<name>` (not `--font-family-<name>`) */
+@theme {
+  --font-vividly: "vividly", ui-sans-serif, system-ui, sans-serif;
+}
+
 @layer base {
   body {
     @apply min-h-screen bg-[#F9F1D2];
   }
+}
+
+/* Load the file — must match the name used in @theme above */
+@font-face {
+  font-family: "vividly";
+  src: url("./assets/fonts/Vividly-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
