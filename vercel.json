@@ -7,8 +7,8 @@
     { "source": "/recommend", "destination": "/api/recommend" }
   ],
   "functions": {
-    "api/**/*.py": {
-      "excludeFiles": "{data/raw/**,**/node_modules/**,**/venv/**,**/.venv/**,backend/node_modules/**}"
+    "api/recommend.py": {
+      "excludeFiles": "{data/raw/**,backend/node_modules/**}"
     }
   }
 }
