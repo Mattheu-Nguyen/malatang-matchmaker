@@ -184,13 +184,8 @@ function App() {
     setIsLoading(true);
 
     try {
-      if (import.meta.env.VITE_MOCK_RECOMMEND === "true") {
-        await new Promise((r) => setTimeout(r, 450));
-        setRecommendedPlace(MOCK_RECOMMEND_RESPONSE.recommended_place);
-        return;
-      }
-
-      const response = await fetch("http://localhost:5000/recommend", {
+      console.log("Sending preferences:", preferences);
+      const response = await fetch("http://127.0.0.1:5000/recommend", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -202,13 +197,16 @@ function App() {
       console.log("Response from server:", data);
 
       if (!response.ok) {
-        throw new Error(data.message || "Request failed");
+        throw new Error(data.error || data.message || "Request failed");
       }
 
       if (data.recommended_place) {
         setRecommendedPlace(data.recommended_place);
       } else {
-        setSubmitError("No recommendation returned. Try again.");
+        setSubmitError(
+          data.hint ||
+            "No recommendation returned. Build the database with data/process_data.py if you have not yet.",
+        );
       }
     } catch (error) {
       console.error("Error:", error);

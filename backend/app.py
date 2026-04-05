@@ -53,22 +53,40 @@
 # debug=True means Flask will auto-reload when you save changes — very helpful!
 # =============================================================================
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from recommendation.engine import get_recommendations
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route("/recommend", methods=["POST"])
-def recommend():        
-    print("Recommendation route hit!")
-    data = request.json
-    print(data)
+@app.route("/")
+def home():
+    return "Server is running!"
 
-    return jsonify({
-        "message": "Data received",
-        "your_input": data
-    })
+# @app.route("/restaurants")
+
+@app.route("/recommend", methods=["POST"])
+def recommend():
+    preferences = request.get_json()
+
+    print("Received preferences:", preferences)
+
+    if not preferences:
+        return jsonify({"error": "No preferences provided"}), 400
+
+    try:
+        results = get_recommendations(preferences)
+
+        print("Results:", results)
+
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
