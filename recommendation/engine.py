@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import random
 
 # -----------------------------------------------------------------------------
 # DB path — mirrors the same logic as backend/database/db.py
@@ -165,7 +166,8 @@ def get_recommendations(preferences: dict) -> list[dict]:
         if not results:
             return []
         top_score = results[0]["match_score"]
-        return [r for r in results if r["match_score"] == top_score]
+        tied = [r for r in results if r["match_score"] == top_score]
+        return [random.choice(tied)]
 
     finally:
         conn.close()
