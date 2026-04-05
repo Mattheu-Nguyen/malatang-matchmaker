@@ -54,21 +54,17 @@
 # =============================================================================
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Server is running!"
-
-# @app.route("/restaurants")
+CORS(app)
 
 @app.route("/recommend", methods=["POST"])
-def recommend():
+def recommend():        
+    print("Recommendation route hit!")
     data = request.json
     print(data)
 
-    # example response
     return jsonify({
         "message": "Data received",
         "your_input": data
