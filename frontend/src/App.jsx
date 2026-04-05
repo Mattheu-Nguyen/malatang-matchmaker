@@ -6,7 +6,6 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: // preferences
       });
     } catch (error) {
       console.error(error);
