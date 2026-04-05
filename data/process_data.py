@@ -21,12 +21,23 @@
 # TODO: import os  (to build file paths)
 # TODO: import json  (if reading line-by-line JSON)
 
+import pandas as pd 
+import sqlite3 
+import os 
+import json
+
 
 # -----------------------------------------------------------------------------
 # STEP 1: Define file paths
 # -----------------------------------------------------------------------------
 # TODO: Set the path to the raw Yelp JSON file in data/raw/
 # TODO: Set the output path for the SQLite DB in data/processed/
+
+directory = os.path.dirname(os.path.abspath(__file__))
+bus_set = os.path.join(directory, "raw", "yelp_academic_dataset_business.json")
+rev_set = os.path.join(directory, "raw", "yelp_academic_dataset_review.json")
+output_db = os.path.join(directory, "processed", "malatang.db")
+
 
 
 # -----------------------------------------------------------------------------
@@ -39,6 +50,14 @@
 # TODO: Print df.columns and df.head() to see what fields exist
 # TODO: Print df.shape to see how many restaurants are in the full dataset
 
+df = pd.read_json(bus_set, lines= True)
+print(df.columns.tolist()) #columns
+print(df.head(10))
+print(df.shape)
+
+
+
+
 
 # -----------------------------------------------------------------------------
 # STEP 3: Filter for malatang / hot pot restaurants
@@ -50,6 +69,10 @@
 # TODO: Filter the DataFrame to only keep malatang-relevant restaurants
 # TODO: Print how many restaurants remain after filtering
 # TODO: If the result is too small, loosen the keywords (e.g., just "Chinese")
+
+mala_df = df[df["categories"].str.contains('Hot Pot| Hotpot| Sichuan| Malatang', case = False, na = False)]
+print(f"Found {len(mala_df)} malatang/hotpot Restaruants! ")
+
 
 
 # -----------------------------------------------------------------------------
@@ -66,6 +89,17 @@
 # TODO: Drop any rows where the name or business_id is missing
 
 
+mala_df = mala_df[['business_id', 'name', 'stars', 'review_count']]
+mala_df = mala_df.rename(columns={ 'stars': 'avg_rating', 
+'review_count': 'num_reviews'}
+)
+
+mala_df = mala_df.dropna(subset=['name', 'business_id'])
+
+print(f"Restaurants after cleaning: {len(mala_df)}")
+print(mala_df.head())
+
+
 # -----------------------------------------------------------------------------
 # STEP 5: (Optional but helpful) Load and join review data
 # -----------------------------------------------------------------------------
@@ -78,6 +112,8 @@
 #       OR keep individual reviews in a separate 'reviews' table
 #
 # TALK TO PERSON 3 about what format works best for the recommendation engine!
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -94,6 +130,15 @@
 #
 # SHARE YOUR TABLE/COLUMN NAMES WITH PERSON 2 so they can write queries!
 
+print("Saving to database...")
+conn = sqlite3.connect(output_db)
+
+mala_df.to_sql('restaurants', conn, if_exists='replace', index=False)
+# rev_df.to_sql('reviews', conn, if_exists='replace', index=False)
+
+conn.close()
+print(f"Saved to {output_db}")
+
 
 # -----------------------------------------------------------------------------
 # STEP 7: Verify the output
@@ -105,6 +150,19 @@
 # TODO: Print the results
 # TODO: Run: SELECT COUNT(*) FROM restaurants
 # TODO: Print the total count so you know how many restaurants are in the DB
+
+conn = sqlite3.connect(output_db)
+
+print("\n--- RESTAURANTS TABLE ---")
+result = pd.read_sql("SELECT * FROM restaurants LIMIT 5", conn)
+print(result)
+
+print("\n--- TOTAL RESTAURANTS ---")
+count = pd.read_sql("SELECT COUNT(*) FROM restaurants", conn)
+print(count)
+
+conn.close()
+print("\nDONE! Share malatang.db with your teammates")
 
 
 # -----------------------------------------------------------------------------
