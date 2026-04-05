@@ -1,0 +1,11 @@
+[project]
+name = "malatang-matchmaker"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "flask>=3.0",
+]
+
+# Vercel Python: WSGI entrypoint (see https://vercel.com/docs/frameworks/backend/flask)
+[project.scripts]
+app = "api.recommend:app"

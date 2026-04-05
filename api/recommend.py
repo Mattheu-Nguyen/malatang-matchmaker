@@ -1,67 +1,49 @@
-"""Vercel serverless handler for POST /api/recommend (also routed as /recommend via vercel.json)."""
+"""Vercel WSGI app for POST /recommend (Flask `app` required by Vercel Python)."""
 
-from http.server import BaseHTTPRequestHandler
 import json
 import os
 import sys
 
-# Project root (parent of /api)
+from flask import Flask, jsonify, request
+
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from recommendation.engine import get_recommendations  # noqa: E402
 
+app = Flask(__name__)
 
-class handler(BaseHTTPRequestHandler):
-    def log_message(self, format, *args):
-        # Quieter logs on Vercel
-        pass
 
-    def _cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+@app.after_request
+def _cors(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
 
-    def do_OPTIONS(self):
-        self.send_response(204)
-        self._cors_headers()
-        self.end_headers()
 
-    def do_POST(self):
-        try:
-            length = int(self.headers.get("Content-Length") or 0)
-            raw = self.rfile.read(length) if length else b""
-            if not raw:
-                self.send_response(400)
-                self.send_header("Content-Type", "application/json")
-                self._cors_headers()
-                self.end_headers()
-                self.wfile.write(
-                    json.dumps({"error": "No preferences provided"}).encode("utf-8")
-                )
-                return
+def _handle_recommend():
+    if request.method == "OPTIONS":
+        return "", 204
+    if not request.data:
+        return jsonify({"error": "No preferences provided"}), 400
+    try:
+        preferences = request.get_json(force=True, silent=False)
+    except Exception:
+        return jsonify({"error": "Invalid JSON body"}), 400
+    if preferences is None:
+        return jsonify({"error": "No preferences provided"}), 400
+    try:
+        results = get_recommendations(preferences)
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-            preferences = json.loads(raw.decode("utf-8"))
-            results = get_recommendations(preferences)
-            body = json.dumps(results).encode("utf-8")
 
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(body)
-        except json.JSONDecodeError:
-            self.send_response(400)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(
-                json.dumps({"error": "Invalid JSON body"}).encode("utf-8")
-            )
-        except Exception as e:
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json")
-            self._cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
+# Path varies by how Vercel mounts the Flask app — register all plausible routes.
+@app.route("/", methods=["POST", "OPTIONS"])
+@app.route("/recommend", methods=["POST", "OPTIONS"])
+@app.route("/api/recommend", methods=["POST", "OPTIONS"])
+def recommend():
+    return _handle_recommend()

@@ -1,2 +1,2 @@
-# Vercel Python functions for /api — recommendation engine uses only the stdlib (sqlite3).
-# No pip packages required; keep this file so Vercel enables the Python runtime.
+# Used by Vercel / pip; mirrored in pyproject.toml
+flask>=3.0
