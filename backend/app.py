@@ -52,3 +52,28 @@
 #
 # debug=True means Flask will auto-reload when you save changes — very helpful!
 # =============================================================================
+
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Server is running!"
+
+# @app.route("/restaurants")
+
+@app.route("/recommend", methods=["POST"])
+def recommend():
+    data = request.json
+    print(data)
+
+    # example response
+    return jsonify({
+        "message": "Data received",
+        "your_input": data
+    })
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
