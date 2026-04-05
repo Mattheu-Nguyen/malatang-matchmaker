@@ -112,7 +112,7 @@ def score_restaurant(restaurant: dict, preferences: dict) -> float:
     return score
 
 
-def get_recommendations(preferences: dict, top_n: int = 10) -> list[dict]:
+def get_recommendations(preferences: dict) -> list[dict]:
     """
     Score every restaurant in the DB against `preferences` and return
     the top_n matches sorted by match_score descending.
@@ -162,7 +162,10 @@ def get_recommendations(preferences: dict, top_n: int = 10) -> list[dict]:
             })
 
         results.sort(key=lambda x: x["match_score"], reverse=True)
-        return results[:top_n]
+        if not results:
+            return []
+        top_score = results[0]["match_score"]
+        return [r for r in results if r["match_score"] == top_score]
 
     finally:
         conn.close()
@@ -183,7 +186,7 @@ if __name__ == "__main__":
     print(f"DB path: {DB_PATH}")
     print(f"DB exists: {os.path.exists(DB_PATH)}\n")
 
-    recommendations = get_recommendations(test_preferences, top_n=5)
+    recommendations = get_recommendations(test_preferences)
     if not recommendations:
         print("No results — is the DB populated? Run data/process_data.py first.")
     else:
