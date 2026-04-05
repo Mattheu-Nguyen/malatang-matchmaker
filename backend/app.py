@@ -52,3 +52,34 @@
 #
 # debug=True means Flask will auto-reload when you save changes — very helpful!
 # =============================================================================
+
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from flask import Flask, request, jsonify
+from recommendation.engine import get_recommendations
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Server is running!"
+
+# @app.route("/restaurants")
+
+@app.route("/recommend", methods=["POST"])
+def recommend():
+    preferences = request.get_json()
+    if not preferences:
+        return jsonify({"error": "No preferences provided"}), 400
+
+    try:
+        results = get_recommendations(preferences)
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
