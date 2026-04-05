@@ -12,34 +12,39 @@ DB_PATH = os.path.join(BASE_DIR, 'data', 'processed', 'malatang.db')
 # Preference keyword mappings
 # -----------------------------------------------------------------------------
 SPICE_KEYWORDS = {
-    "mild":        ["mild", "not spicy", "light", "no spice"],
-    "medium":      ["medium spice", "moderate", "medium hot"],
-    "spicy":        ["spicy", "hot", "mala", "spice"],
-    "extra spicy": ["very spicy", "extra hot", "numbing", "extra spicy"],
+    "mild":        ["mild", "not spicy", "light", "no spice", "no spicy", "non spicy", "zero spice", "gentle", "barely spicy", "kid friendly", "low heat", "little spice"],
+    "medium":      ["medium spice", "moderate", "medium hot", "balanced spice", "some spice", "bit spicy", "mid spice", "medium heat"],
+    "spicy":       ["spicy", "hot", "mala", "spice", "spicy broth", "chili", "chilli", "peppery", "kick", "heat", "szechuan spice", "sichuan spice", "chili oil", "chili broth"],
+    "extra spicy": ["very spicy", "extra hot", "numbing", "extra spicy", "super spicy", "insanely spicy", "burning", "mouth burning", "tongue numbing", "ma la", "extreme heat", "nuclear"],
 }
 
 BROTH_KEYWORDS = {
-    "spicy mala":  ["mala", "spicy broth", "red broth"],
+    "spicy mala":  ["mala", "spicy broth", "red broth", "sichuan broth", "szechuan broth", "chili broth", "chili oil broth", "mala soup", "mala tang", "peppercorn broth", "ma la broth", "spicy base"],
     "clear":       ["clear broth", "light broth", "plain broth"],
-    "tomato":      ["tomato", "tomato broth"],
-    "mushroom":    ["mushroom broth", "mushroom"],
+    "tomato":      ["tomato"],
+    "mushroom":    ["mushroom broth", "mushroom soup", "vegetarian broth", "vegan broth"],
 }
 
 MEAT_KEYWORDS = {
-    "beef":   ["beef", "wagyu", "tongue"],
+    "beef":   ["beef", "wagyu", "tongue","ribeye", "brisket", "shank", "oxtail"],
     "pork":   ["pork", "bacon"],
     "lamb":   ["lamb", "mutton"],
     "chicken":["chicken"],
-    "seafood":["seafood", "shrimp", "fish", "fish cake", "fishcake"],
+    "seafood":["seafood", "shrimp", "fish", "fish cake", "fishcake", "prawn", "squid", "octopus", "scallop", "clam", "mussel", "crab", "surimi"],
 }
 
 INGREDIENT_KEYWORDS = {
-    "tofu":       ["tofu"],
-    "fish cake":  ["fish cake", "fishcake"],
-    "mushroom":   ["mushroom"],
-    "noodles":    ["noodles", "noodle"],
-    "veggies":    ["veggies", "vegetables", "veggie"],
-    "egg":        ["egg"],
+    "tofu":       ["tofu", "bean curd"],
+    "fish cake":  ["fish cake", "fishcake", "fish ball", "fishball", "fish tofu", "seafood ball"],
+    "mushroom":   ["mushroom", "enoki","shiitake", "king oyster", "oyster mushroom", "wood ear", "black fungus"],
+    "noodles":    ["noodles", "noodle", "vermicelli", "udon", "ramen"],
+    "veggies":    ["veggies", "vegetables", "veggie","bok choy", "napa cabbage", "cabbage", "spinach", "lettuce", "lotus root", "corn", "seaweed"]
+}
+
+SIDE_DISH_KEYWORDS = {
+    "rice":         ["rice", "steamed rice", "white rice", "fried rice"],
+    "fried dough":  ["fried dough", "youtiao", "you tiao", "dough fritter", "chinese donut", "chinese doughnut"],
+    "sesame noodles": ["sesame noodles", "sesame noodle", "cold noodles", "sesame sauce noodles", "ma jiang noodles", "mee sesame"],
 }
 
 
@@ -90,6 +95,12 @@ def score_restaurant(restaurant: dict, preferences: dict) -> float:
         keywords = INGREDIENT_KEYWORDS.get(ing_lower, [ing_lower])
         score += _search(searchable, keywords) * 5
 
+    # Side dish preferences (+5 per keyword hit per side dish)
+    for side in preferences.get("side_dishes", []):
+        side_lower = side.lower()
+        keywords = SIDE_DISH_KEYWORDS.get(side_lower, [side_lower])
+        score += _search(searchable, keywords) * 5
+
     # Star rating bonus to break ties (max +10)
     try:
         score += float(restaurant.get("stars") or 0) * 2
@@ -109,7 +120,7 @@ def get_recommendations(preferences: dict, top_n: int = 10) -> list[dict]:
         broth        : str  — "spicy mala" | "clear" | "tomato" | "mushroom"
         meats        : list[str]
         ingredients  : list[str]
-        side_dishes  : list[str]  (currently unused — reserved for future scoring)
+        side_dishes  : list[str]  — "rice" | "fried dough" | "sesame noodles"
     """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
