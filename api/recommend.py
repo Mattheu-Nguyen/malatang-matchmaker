@@ -28,12 +28,8 @@ def _cors(response):
 def _handle_recommend():
     if request.method == "OPTIONS":
         return "", 204
-    if not request.data:
-        return jsonify({"error": "No preferences provided"}), 400
-    try:
-        preferences = request.get_json(force=True, silent=False)
-    except Exception:
-        return jsonify({"error": "Invalid JSON body"}), 400
+    # Do not use request.data — on Vercel it can be empty while the JSON body is still valid.
+    preferences = request.get_json(force=True, silent=True)
     if preferences is None:
         return jsonify({"error": "No preferences provided"}), 400
     try:
