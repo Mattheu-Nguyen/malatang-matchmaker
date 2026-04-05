@@ -419,7 +419,7 @@ function App() {
         id="results"
         ref={resultsRef}
         aria-live="polite"
-        className="scroll-mt-4 flex min-h-screen flex-col items-center justify-center bg-[#F9F1D2] px-4 py-8"
+        className="scroll-mt-4 flex min-h-screen flex-col items-center justify-center bg-[#F9F1D2] px-3 py-6 sm:px-4 sm:py-8"
       >
         <div className="relative mx-auto w-full max-w-4xl">
           <img
@@ -428,20 +428,20 @@ function App() {
             role="presentation"
             className="mx-auto block h-auto w-full object-contain"
           />
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 sm:p-10">
-            <div className="w-full max-w-lg text-center mt-5">
+          <div className="absolute inset-0 flex flex-col items-center justify-center overflow-y-auto overscroll-contain px-3 py-8 sm:p-6 md:p-10">
+            <div className="flex w-full max-w-[min(100%,24rem)] flex-col justify-center px-1 text-center sm:max-w-lg sm:px-2">
               {recommendedPlace ? (
-                <div className="justify-center">
-                  <h2 className="mt-20 font-vividly text-[#AC3142] text-8xl font-semibold sm:text-4xl">
+                <div className="flex flex-col items-center justify-center">
+                  <h2 className="text-balance break-words font-vividly text-2xl font-semibold leading-snug text-[#AC3142] sm:text-3xl md:text-4xl lg:text-5xl">
                     {recommendedPlace.name}
                   </h2>
                   {recommendedPlace.matchScore != null ||
                   recommendedPlace.avgRating != null
                    ? (
-                    <dl className="mt-6 space-y-4 pt-6 text-center text-3xl font-vividly text-[#AC3142]">
+                    <dl className="mt-4 space-y-3 pt-4 text-center font-vividly text-lg text-[#AC3142] sm:mt-6 sm:space-y-4 sm:pt-6 sm:text-2xl md:text-3xl">
                       {recommendedPlace.matchScore != null ? (
                         <div>
-                          <dt className="font-medium ">
+                          <dt className="font-medium">
                             Match score
                           </dt>
                           <dd className="mt-1 font-semibold">
@@ -463,7 +463,7 @@ function App() {
                   ) : null}
                 </div>
               ) : (
-                <p className="rounded-xl bg-white/85 px-4 py-3 text-base text-gray-700 shadow-md backdrop-blur-sm">
+                <p className="rounded-xl bg-white/85 px-3 py-3 text-sm text-gray-700 shadow-md backdrop-blur-sm sm:px-4 sm:text-base">
                   Submit your preferences above to see your recommended spot.
                 </p>
               )}
