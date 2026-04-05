@@ -32,6 +32,7 @@ print(df.shape)
 # -----------------------------------------------------------------------------
 
 mala_df = df[df["categories"].str.contains('Hot Pot|Hotpot|Sichuan|Malatang', case = False, na = False)]
+mala_df = mala_df[mala_df["business_id"] != "iksVwRfpWymIUUFqw0tXpw"]
 print(f"Found {len(mala_df)} malatang/hotpot Restaruants! ")
 
 
