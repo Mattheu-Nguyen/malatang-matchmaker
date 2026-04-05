@@ -1,18 +1,15 @@
-"""Vercel WSGI app: static SPA from frontend/dist + POST /recommend."""
+"""Vercel WSGI app: POST /recommend only. Static files come from Vercel output (frontend/dist)."""
 
 import os
 import sys
-from urllib.parse import unquote
 
-from flask import Flask, jsonify, request, send_file, send_from_directory
+from flask import Flask, jsonify, request
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from recommendation.engine import get_recommendations  # noqa: E402
-
-DIST = os.path.join(_ROOT, "frontend", "dist")
 
 app = Flask(__name__)
 
@@ -43,26 +40,3 @@ def _handle_recommend():
 @app.route("/api/recommend", methods=["POST", "OPTIONS"])
 def recommend():
     return _handle_recommend()
-
-
-@app.route("/", methods=["GET"])
-def index():
-    return send_from_directory(DIST, "index.html")
-
-
-@app.route("/assets/<path:path>", methods=["GET"])
-def dist_assets(path):
-    safe = unquote(path).replace("\x00", "")
-    return send_from_directory(os.path.join(DIST, "assets"), safe)
-
-
-@app.route("/<path:path>", methods=["GET"])
-def dist_public(path):
-    """Root-level files from Vite `public/` (e.g. favicon) and similar."""
-    path = unquote(path).replace("\x00", "")
-    if path.startswith("recommend") or path.startswith("api/"):
-        return jsonify({"error": "Method Not Allowed"}), 405
-    candidate = os.path.join(DIST, path)
-    if os.path.isfile(candidate):
-        return send_file(candidate)
-    return send_from_directory(DIST, "index.html")
